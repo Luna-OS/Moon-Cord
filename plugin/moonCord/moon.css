@@ -1,0 +1,84 @@
+/*
+ * Moon-Cord – Moon-Theme für Discord (Nachtblau + Lila)
+ *
+ * html.moon-cord     Moon-Farben (zusammen mit palette.css)
+ * html.moon-cord-bg  Moon-Hintergrund über Discords Nitro-Theme-Technik.
+ *                    Die Werte sind !important, damit sie jedes Nitro-Theme
+ *                    (das Discord direkt am <html> setzt) überschreiben.
+ */
+
+html.moon-cord {
+    --moon-bg-deep: #0c0a1a;
+    --moon-bg: #130f28;
+    --moon-surface: #1a1535;
+    --moon-elevated: #211a44;
+    --moon-border: #3a3168;
+    --moon-accent: #8e7cff;
+    --moon-accent-soft: #b8abff;
+    --moon-text: #eeeaff;
+    --moon-text-dim: #aba3d6;
+    --moon-pink: #ff8fb1;
+}
+
+/* Links und Erwähnungen in Moon-Lila */
+html.moon-cord.theme-dark,
+html.moon-cord.theme-darker,
+html.moon-cord.theme-midnight,
+html.moon-cord .theme-dark,
+html.moon-cord .theme-darker,
+html.moon-cord .theme-midnight {
+    --text-link: var(--moon-accent-soft);
+    --text-link-low-saturation: var(--moon-accent-soft);
+    --mention-foreground: var(--moon-accent-soft);
+    --mention-background: color-mix(in oklab, var(--moon-accent) 22%, transparent);
+    --info-help-foreground: var(--moon-accent-soft);
+}
+
+html.moon-cord.theme-light,
+html.moon-cord .theme-light {
+    --text-link: #5b47d6;
+    --text-link-low-saturation: #5b47d6;
+}
+
+html.moon-cord ::selection {
+    background: color-mix(in oklab, var(--moon-accent) 45%, transparent);
+}
+
+/* ---------- Hintergrund / Nitro-Theme-Override ---------- */
+
+html.moon-cord-bg {
+    /* Moon ersetzt Farbe und Bild jedes Nitro-Themes */
+    --custom-theme-base-color: var(--moon-bg) !important;
+    --custom-theme-base-color-hsl: 249 46% 11% !important;
+    --custom-theme-base-color-dark: var(--moon-bg) !important;
+    --custom-theme-base-color-dark-hsl: 249 46% 11% !important;
+    --custom-theme-base-color-light: var(--moon-text) !important;
+    --custom-theme-base-color-light-hsl: 251 100% 96% !important;
+    --custom-theme-text-color: var(--moon-text) !important;
+    --custom-theme-text-color-dark: var(--moon-text) !important;
+    --custom-theme-text-color-light: var(--moon-bg) !important;
+    --custom-theme-primary-color: var(--moon-accent) !important;
+    --custom-theme-secondary-color: #2e2656 !important;
+
+    /* Die Moon-Palette färbt schon alles – Nitro darf nichts dazumischen */
+    --custom-theme-base-color-amount: 0% !important;
+    --custom-theme-text-color-amount: 0% !important;
+    --custom-theme-border-color-amount: 0% !important;
+
+    /* Halbtransparente Moon-Flächen über dem Hintergrundbild.
+       --moon-bg-visibility (0 … 1) kommt aus den Plugin-Einstellungen. */
+    --custom-background-gradient-color: 19 15 40 !important;
+    --custom-background-gradient-opacity-mix-amount: 1 !important;
+    --custom-background-gradient-lowest-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.25) !important;
+    --custom-background-gradient-lower-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.35) !important;
+    --custom-background-gradient-low-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.45) !important;
+    --custom-background-gradient-high-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.55) !important;
+    --custom-background-gradient-higher-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.65) !important;
+    --custom-background-gradient-highest-opacity: calc(1 - var(--moon-bg-visibility, 0.35) * 0.8) !important;
+    --custom-background-gradient-opacity-chat: calc(1 - var(--moon-bg-visibility, 0.35) * 0.45) !important;
+    --custom-background-gradient-opacity-app-frame: calc(1 - var(--moon-bg-visibility, 0.35) * 0.65) !important;
+}
+
+html.moon-cord-bg.theme-light {
+    --custom-background-gradient-color: 238 234 255 !important;
+}

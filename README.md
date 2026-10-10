@@ -1,1 +1,74 @@
-# Moon-Cord
+# 🌙 Moon-Cord
+
+Ein eigener Discord-Client im **Moon-Design** (Nachtblau + Lila) – passend zum [Moon-Windows-Theme](https://github.com/Luna-OS/Moon-Windows-Theme).
+
+- **Moon-Theme eingebaut**: Hintergründe, Kanalliste, Chat, Popups, Buttons, Links und Text in den Moon-Farben (`#130F28`, `#1A1535`, `#8E7CFF`, `#B8ABFF`, `#EEEAFF` …).
+- **Nitro-Themes werden überschrieben**: Hat dein Account ein Nitro-Farbverlauf-Theme aktiv, zeigt Moon-Cord trotzdem Moon. (Abschaltbar in den Plugin-Einstellungen.)
+- **Moon-Hintergründe**: Mondnacht, Mondsichel, Horizont, Sternenhimmel, nur Verlauf oder ein eigenes Bild – halbtransparent hinter Chat und Kanalliste.
+- **Alle Vencord-Plugins an Bord** (über 160). Beliebte Plugins sind beim ersten Start schon an, alle anderen lassen sich mit einem Klick einschalten.
+- **Eigene App** mit Moon-Icon, Moon-Ladebildschirm und automatischen Updates aus diesem Repository.
+
+## Installation
+
+Unter [**Releases**](https://github.com/Luna-OS/Moon-Cord/releases/latest) herunterladen:
+
+| System | Datei |
+| --- | --- |
+| Windows | `Moon-Cord-Setup-<version>.exe` (Installer) oder `Moon-Cord-<version>-win.zip` (ohne Installation) |
+| Linux | `.AppImage`, `.deb` oder `.tar.gz` |
+
+Der Windows-Installer ist nicht signiert. Wenn Windows „Der Computer wurde durch Windows geschützt“ meldet: **Weitere Informationen → Trotzdem ausführen**.
+
+Beim ersten Start fragt Moon-Cord nach ein paar Einstellungen (Autostart, Rich Presence, Tray). „Import Settings“ übernimmt Plugins und Einstellungen aus einer vorhandenen Vencord-Installation.
+
+## Einstellungen
+
+**Benutzereinstellungen → Vencord → Plugins → MoonCord**
+
+| Einstellung | Bedeutung |
+| --- | --- |
+| Hintergrund | Mondnacht, Mondsichel, Horizont, Sternenhimmel, nur Moon-Verlauf, eigenes Bild oder keiner |
+| Eigenes Bild | Bild-URL für „Eigenes Bild“. Erlaubt sind die Bild-Hosts, die Vencord freigibt (z. B. imgur, GitHub). |
+| Sichtbarkeit | Wie stark der Hintergrund durch Chat und Listen scheint |
+| Nitro-Themes ersetzen | An (Standard): immer Moon. Aus: ein aktives Nitro-Theme wird angezeigt. |
+
+Client-Einstellungen (Tray, Autostart, Fenster) findest du unter **Benutzereinstellungen → Moon-Cord**.
+
+## Wie es funktioniert
+
+Moon-Cord baut auf zwei Open-Source-Projekten auf, die beim Bauen in festen Versionen geholt werden (`upstream.json`):
+
+- [**Vencord**](https://github.com/Vendicated/Vencord) – die Plugins. Dazu kommt das Moon-Plugin aus [`plugin/moonCord`](plugin/moonCord).
+- [**Vesktop**](https://github.com/Vencord/Vesktop) – der Desktop-Client. [`scripts/patch-vesktop.mjs`](scripts/patch-vesktop.mjs) macht daraus Moon-Cord (Name, Icons, Farben, eingebautes Moon-Vencord, Updates aus diesem Repo).
+
+Das Moon-Theme färbt Discords Grundpaletten um ([`palette.css`](plugin/moonCord/palette.css), erzeugt von [`scripts/generate-palette.mjs`](scripts/generate-palette.mjs)). Dadurch ändern sich alle Flächen und Texte auf einmal. Den Hintergrund legt es über dieselbe Technik, die Discord für Nitro-Themes nutzt – mit `!important`, sodass ein aktives Nitro-Theme immer überschrieben wird. Zusätzlich meldet Discords Theme-Speicher „kein Nitro-Theme“, solange Moon aktiv ist.
+
+## Selbst bauen
+
+Voraussetzungen: Node.js 22+, pnpm 11, Git.
+
+```sh
+node scripts/build.mjs                 # Vencord + Client bauen
+pnpm start                             # Moon-Cord direkt starten
+node scripts/build.mjs --dist --win    # Windows-Installer nach dist/
+node scripts/build.mjs --dist --linux  # AppImage, .deb, .tar.gz nach dist/
+```
+
+Weitere Skripte:
+
+- `node scripts/generate-palette.mjs` – Moon-Palette neu aus Discords aktuellem CSS erzeugen (falls Discord seine Farben ändert)
+- `node scripts/generate-icons.mjs` – Icons aus `desktop/assets/*.svg` neu rendern (braucht Playwright)
+
+## Neue Version veröffentlichen
+
+1. Optional Vencord/Vesktop aktualisieren: neue Commits in `upstream.json` eintragen.
+2. `version` in `package.json` erhöhen.
+3. Auf `main` mergen – der **Release**-Workflow baut Windows und Linux und veröffentlicht das Release automatisch.
+
+Installierte Clients finden die neue Version selbst. Vencords eingebauter Updater (Vencord → Updater) holt sich Plugin-Updates ebenfalls aus den Moon-Cord-Releases.
+
+## Lizenz
+
+Die eigenen Dateien dieses Repositorys stehen unter der [MIT-Lizenz](LICENSE). Die gebaute App enthält Vencord und Vesktop, die unter der [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) stehen; damit steht auch die fertige App unter der GPL-3.0. Das Moon-Plugin (`plugin/moonCord`) ist GPL-3.0-or-later, weil es Teil von Vencord wird.
+
+Moon-Cord ist kein offizielles Vencord- oder Vesktop-Projekt. Bitte meldet Probleme hier und nicht im Vencord-Support. Client-Mods verstoßen gegen Discords Nutzungsbedingungen; Moon-Cord verhält sich dabei wie Vencord/Vesktop.

@@ -1,0 +1,90 @@
+name: Release
+
+# Jeder Push auf main mit einer neuen Version in package.json wird automatisch
+# als GitHub-Release veröffentlicht. Moon-Cord und Vencords Updater holen sich
+# ihre Updates von dort.
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
+            exists: ${{ steps.version.outputs.exists }}
+        steps:
+            - uses: actions/checkout@v7
+
+            - id: version
+              run: |
+                  version=$(node -p 'require("./package.json").version')
+                  echo "version=$version" >> "$GITHUB_OUTPUT"
+                  if gh release view "v$version" > /dev/null 2>&1; then
+                      echo "exists=true" >> "$GITHUB_OUTPUT"
+                      echo "v$version ist schon veröffentlicht – nichts zu tun."
+                  else
+                      echo "exists=false" >> "$GITHUB_OUTPUT"
+                  fi
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+    build:
+        needs: check
+        if: needs.check.outputs.exists != 'true'
+        uses: ./.github/workflows/build.yml
+
+    release:
+        needs: [check, build]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: actions/download-artifact@v4
+              with:
+                  path: dist
+                  merge-multiple: true
+
+            - name: Release veröffentlichen
+              run: |
+                  version="${{ needs.check.outputs.version }}"
+                  short="${GITHUB_SHA::7}"
+                  vencord=$(node -p 'require("./upstream.json").vencord.commit.slice(0, 7)')
+                  vesktop=$(node -p 'require("./upstream.json").vesktop.commit.slice(0, 7)')
+                  ls -la dist
+
+                  cat > notes.md <<NOTES
+                  ## 🌙 Moon-Cord v$version
+
+                  Discord im Moon-Design (Nachtblau + Lila) – mit **allen Vencord-Plugins** und dem Moon-Theme, das auch Nitro-Themes überschreibt.
+
+                  ### Download
+                  | System | Datei |
+                  | --- | --- |
+                  | **Windows** (Installer) | \`Moon-Cord-Setup-$version.exe\` |
+                  | Windows (ohne Installation) | \`Moon-Cord-$version-win.zip\` |
+                  | Linux | \`.AppImage\`, \`.deb\` oder \`.tar.gz\` |
+
+                  Updates kommen danach automatisch.
+
+                  > Windows zeigt beim ersten Start evtl. „Der Computer wurde durch Windows geschützt“, weil der Installer nicht signiert ist: **Weitere Informationen → Trotzdem ausführen**.
+
+                  Basiert auf Vencord \`$vencord\` und Vesktop \`$vesktop\`.
+                  NOTES
+
+                  # Der Titel endet mit dem Commit-Hash – daran erkennt Vencords Updater neue Versionen
+                  gh release create "v$version" dist/* \
+                      --target "$GITHUB_SHA" \
+                      --title "Moon-Cord v$version $short" \
+                      --notes-file notes.md
+              env:
+                  GH_TOKEN: ${{ github.token }}

@@ -1,0 +1,22 @@
+{
+    "name": "moon-cord",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Moon-Cord – Discord im Moon-Design, mit allen Vencord-Plugins",
+    "license": "MIT",
+    "author": "Luna",
+    "type": "module",
+    "scripts": {
+        "fetch": "node scripts/fetch-upstream.mjs",
+        "build": "node scripts/build.mjs",
+        "dist:win": "node scripts/build.mjs --dist --win",
+        "dist:linux": "node scripts/build.mjs --dist --linux",
+        "start": "pnpm -C .upstream/vesktop exec electron .",
+        "palette": "node scripts/generate-palette.mjs",
+        "icons": "node scripts/generate-icons.mjs"
+    },
+    "engines": {
+        "node": ">=22"
+    },
+    "packageManager": "pnpm@11.9.0"
+}
