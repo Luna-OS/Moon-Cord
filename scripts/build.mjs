@@ -53,11 +53,18 @@ console.log(`\n» Moon-Cord ${hash}`);
 
 // ---------- 1. Vencord + Moon-Plugin ----------
 
+// Upstream zurücksetzen, damit mehrfaches Bauen nicht doppelt umbaut
+run(VENCORD_DIR, "git", ["checkout", "-q", "--force", "HEAD"]);
+run(VENCORD_DIR, "git", ["clean", "-q", "-fd", "-e", "node_modules", "-e", "dist"]);
+
 const pluginTarget = join(VENCORD_DIR, "src/plugins/moonCord");
 rmSync(pluginTarget, { recursive: true, force: true });
 cpSync(join(ROOT, "plugin/moonCord"), pluginTarget, { recursive: true });
 
 run(VENCORD_DIR, "pnpm", ["install", "--frozen-lockfile"]);
+// Sichtbare Texte "Vencord" -> "Moon-Cord" (Hauptprozess und interne Pfade bleiben)
+run(ROOT, process.execPath, ["scripts/rebrand.mjs", VENCORD_DIR, "src",
+    "--skip", "src/main", "src/shared", "src/debug", "src/plugins/xsOverlay", "src/plugins/devCompanion.dev"]);
 run(VENCORD_DIR, "pnpm", ["build", "--standalone"], {
     // Vencords Updater schaut damit in die Moon-Cord-Releases statt zu Vendicated
     VENCORD_REMOTE: REPO,
@@ -79,6 +86,8 @@ writeFileSync(join(bundleDir, "package.json"), "{}");
 writeFileSync(join(bundleDir, "moon-cord-bundle.txt"), hash);
 
 run(VESKTOP_DIR, "pnpm", ["install", "--frozen-lockfile"]);
+// firstLaunch.ts sucht den echten Vencord-Ordner zum Importieren der Einstellungen
+run(ROOT, process.execPath, ["scripts/rebrand.mjs", VESKTOP_DIR, "src/main", "src/renderer", "--skip", "src/main/firstLaunch.ts"]);
 run(VESKTOP_DIR, "pnpm", ["build"]);
 
 if (!wantsDist) {

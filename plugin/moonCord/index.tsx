@@ -89,7 +89,7 @@ function backgroundImage(): string | null {
 }
 
 function applyBackground() {
-    if (!running) return;
+    if (!running || !document.documentElement) return;
 
     const image = backgroundImage();
     const visibility = Math.min(Math.max(settings.store.visibility, 0), 100) / 100;
@@ -99,7 +99,7 @@ function applyBackground() {
     wallpaperStyle.textContent = image
         ? `html.moon-cord-bg { --custom-theme-background: ${image} !important; --moon-bg-visibility: ${visibility}; }`
         : "";
-    if (!wallpaperStyle.isConnected) document.head.append(wallpaperStyle);
+    if (!wallpaperStyle.isConnected) (document.head ?? document.documentElement).append(wallpaperStyle);
 
     updateClasses();
 }
@@ -121,6 +121,7 @@ let addedThemeClass = false;
 
 function updateClasses() {
     const root = document.documentElement;
+    if (!root) return;
     const background = wantsBackground();
 
     root.classList.toggle("moon-cord", running);
@@ -149,6 +150,17 @@ function watchClasses() {
         if (outdated) updateClasses();
     });
     classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+}
+
+function whenRootExists(callback: () => void) {
+    if (document.documentElement) return callback();
+
+    const observer = new MutationObserver(() => {
+        if (!document.documentElement) return;
+        observer.disconnect();
+        callback();
+    });
+    observer.observe(document, { childList: true });
 }
 
 // ---------- Nitro-Theme-Store ----------
@@ -205,11 +217,12 @@ export default definePlugin({
         enableStyle(paletteStyle);
         enableStyle(moonStyle);
 
-        if (document.head) applyBackground();
-        else document.addEventListener("DOMContentLoaded", applyBackground, { once: true });
-
-        updateClasses();
-        watchClasses();
+        // Moon startet so früh, dass es <html> noch gar nicht gibt
+        whenRootExists(() => {
+            if (!running) return;
+            applyBackground();
+            watchClasses();
+        });
 
         onceReady.then(() => {
             if (!running) return;
