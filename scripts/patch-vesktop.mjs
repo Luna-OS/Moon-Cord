@@ -113,6 +113,29 @@ replace("src/main/tray.ts",
                 app.relaunch();`);
 replace("src/main/tray.ts", 'import { resolveAssetPath } from "./userAssets";', 'import { installUpdateNow } from "./updater";\nimport { resolveAssetPath } from "./userAssets";');
 
+// ---------- Screen-Share-Picker nicht mitten in der Übertragung ----------
+// Fragt Discord während einer laufenden Übertragung erneut an (Verbindungsabbruch,
+// Serverwechsel), nimmt Moon-Cord still dieselbe Quelle statt den Picker zu öffnen.
+
+copyFileSync(join(ROOT, "desktop/streamReuse.ts"), join(VESKTOP_DIR, "src/renderer/streamReuse.ts"));
+replace("src/renderer/components/ScreenSharePicker.tsx",
+    'import { isLinux, isWindows } from "renderer/utils";',
+    'import { getReusableStreamPick, rememberStreamPick } from "renderer/streamReuse";\nimport { isLinux, isWindows } from "renderer/utils";');
+replace("src/renderer/components/ScreenSharePicker.tsx",
+    `export function openScreenSharePicker(screens: Source[], skipPicker: boolean) {
+    let didSubmit = false;`,
+    `export function openScreenSharePicker(screens: Source[], skipPicker: boolean) {
+    const reusable = getReusableStreamPick(screens);
+    if (reusable) return Promise.resolve(reusable);
+
+    let didSubmit = false;`);
+replace("src/renderer/components/ScreenSharePicker.tsx",
+    `                        resolve(v);
+                    }}`,
+    `                        rememberStreamPick(v);
+                        resolve(v);
+                    }}`);
+
 // Windows kennt die App sonst unter Vesktops ID: Benachrichtigungen mit falschem Namen/Icon
 // und ein doppeltes Taskleisten-Symbol neben der angehefteten Verknüpfung
 replace("src/main/main.ts", 'app.setAppUserModelId("dev.vencord.vesktop")', `app.setAppUserModelId("${build.appId}")`);
