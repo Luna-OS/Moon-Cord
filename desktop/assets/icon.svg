@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stop-color="#1a1535"/>
+            <stop offset="0.6" stop-color="#2a2160"/>
+            <stop offset="1" stop-color="#4b3ab3"/>
+        </linearGradient>
+        <radialGradient id="haze" cx="0.42" cy="0.55" r="0.5">
+            <stop offset="0" stop-color="#b8abff" stop-opacity="0.35"/>
+            <stop offset="1" stop-color="#b8abff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="moon" x1="0.15" y1="0.1" x2="0.75" y2="1">
+            <stop offset="0" stop-color="#ffffff"/>
+            <stop offset="0.5" stop-color="#e2dcff"/>
+            <stop offset="1" stop-color="#9a88ff"/>
+        </linearGradient>
+        <mask id="crescent">
+            <circle cx="460" cy="548" r="292" fill="#fff"/>
+            <circle cx="612" cy="420" r="262" fill="#000"/>
+        </mask>
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="22"/>
+        </filter>
+        <clipPath id="tile">
+            <rect x="40" y="40" width="944" height="944" rx="216"/>
+        </clipPath>
+    </defs>
+
+    <g clip-path="url(#tile)">
+        <rect width="1024" height="1024" fill="url(#bg)"/>
+        <rect width="1024" height="1024" fill="url(#haze)"/>
+        <g fill="#ffffff">
+            <circle cx="214" cy="236" r="6" opacity="0.7"/>
+            <circle cx="300" cy="150" r="4" opacity="0.5"/>
+            <circle cx="842" cy="760" r="5" opacity="0.6"/>
+            <circle cx="180" cy="760" r="4" opacity="0.45"/>
+            <circle cx="860" cy="210" r="5" opacity="0.55"/>
+            <circle cx="560" cy="160" r="3.5" opacity="0.5"/>
+        </g>
+    </g>
+    <rect x="40" y="40" width="944" height="944" rx="216" fill="none" stroke="#b8abff" stroke-opacity="0.35" stroke-width="6"/>
+
+    <g mask="url(#crescent)">
+        <circle cx="460" cy="548" r="292" fill="#b8abff" filter="url(#glow)" opacity="0.8"/>
+        <circle cx="460" cy="548" r="282" fill="url(#moon)"/>
+    </g>
+
+    <g fill="#ffffff">
+        <path d="M720 300 C728 352 744 368 796 376 C744 384 728 400 720 452 C712 400 696 384 644 376 C696 368 712 352 720 300 Z"/>
+        <path d="M806 500 C811 530 820 539 850 544 C820 549 811 558 806 588 C801 558 792 549 762 544 C792 539 801 530 806 500 Z" opacity="0.9"/>
+    </g>
+</svg>

@@ -1,0 +1,53 @@
+name: Build
+
+on:
+    pull_request:
+    workflow_call:
+    workflow_dispatch:
+
+env:
+    FORCE_COLOR: true
+
+jobs:
+    build:
+        name: Build (${{ matrix.platform }})
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - os: windows-latest
+                      platform: win
+                    - os: ubuntu-latest
+                      platform: linux
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: pnpm/action-setup@v6 # Version aus "packageManager" in package.json
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+
+            - name: Kurz-Hash für Vencords Updater
+              shell: bash
+              run: echo "MOON_CORD_HASH=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+            - name: Moon-Cord bauen
+              run: node scripts/build.mjs --dist --${{ matrix.platform }}
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: moon-cord-${{ matrix.platform }}
+                  if-no-files-found: error
+                  path: |
+                      dist/*.exe
+                      dist/*.zip
+                      dist/*.AppImage
+                      dist/*.deb
+                      dist/*.tar.gz
+                      dist/*.yml
+                      dist/*.blockmap
+                      dist/vencordDesktop*
