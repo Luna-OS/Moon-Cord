@@ -14,7 +14,8 @@ const ASSETS = join(ROOT, "desktop/assets");
 const REPO = "Luna-OS/Moon-Cord";
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8"));
 
-const read = file => readFileSync(join(VESKTOP_DIR, file), "utf-8");
+// Unter Windows kann Git Dateien mit CRLF auschecken – wir arbeiten immer mit LF
+const read = file => readFileSync(join(VESKTOP_DIR, file), "utf-8").replace(/\r\n/g, "\n");
 const write = (file, content) => writeFileSync(join(VESKTOP_DIR, file), content);
 
 function replace(file, search, replacement, { all = false } = {}) {
@@ -105,7 +106,7 @@ function* walk(dir) {
 let renamed = 0;
 for (const dir of ["src/main", "src/renderer", "static/views"]) {
     for (const path of walk(join(VESKTOP_DIR, dir))) {
-        const lines = readFileSync(path, "utf-8").split("\n");
+        const lines = readFileSync(path, "utf-8").replace(/\r\n/g, "\n").split("\n");
         const out = lines.map(line => {
             const isComment = /^\s*(\*|\/\/|\/\*)/.test(line);
             // interner Patch-Name, kein sichtbarer Text

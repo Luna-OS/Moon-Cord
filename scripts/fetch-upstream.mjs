@@ -23,6 +23,8 @@ for (const [name, { repo, commit }] of Object.entries(upstream)) {
         mkdirSync(dir, { recursive: true });
         git(dir, "init", "-q");
         git(dir, "remote", "add", "origin", repo);
+        // Dateien genau wie im Repo auschecken (kein CRLF unter Windows)
+        git(dir, "config", "core.autocrlf", "false");
     }
 
     git(dir, "fetch", "-q", "--depth", "1", "origin", commit);
