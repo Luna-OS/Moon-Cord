@@ -7,6 +7,7 @@ Ein eigener Discord-Client im **Moon-Design** (Nachtblau + Lila) – passend zum
 - **Moon-Hintergründe**: Mondnacht, Mondsichel, Horizont, Sternenhimmel, nur Verlauf oder ein eigenes Bild – halbtransparent hinter Chat und Kanalliste.
 - **Alle Vencord-Plugins an Bord** (über 160). Beliebte Plugins sind beim ersten Start schon an, alle anderen lassen sich mit einem Klick einschalten.
 - **Eigene App** mit Moon-Icon, Moon-Ladebildschirm und automatischen Updates aus diesem Repository.
+- **Überall Moon-Cord**: Einstellungen, Menüs, Tray und Meldungen heißen Moon-Cord statt Vencord/Vesktop ([`scripts/rebrand.mjs`](scripts/rebrand.mjs) ändert nur sichtbare Texte, keinen Code).
 
 ## Installation
 
@@ -23,7 +24,7 @@ Beim ersten Start fragt Moon-Cord nach ein paar Einstellungen (Autostart, Rich P
 
 ## Einstellungen
 
-**Benutzereinstellungen → Vencord → Plugins → MoonCord**
+**Benutzereinstellungen → Moon-Cord → Plugins → MoonCord**
 
 | Einstellung | Bedeutung |
 | --- | --- |

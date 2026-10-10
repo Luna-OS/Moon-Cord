@@ -77,7 +77,6 @@ copyFileSync(join(ASSETS, "tray.png"), join(VESKTOP_DIR, "static/tray/tray.png")
 copyFileSync(join(ASSETS, "tray.png"), join(VESKTOP_DIR, "static/tray.png"));
 copyFileSync(join(ASSETS, "tray-unread.png"), join(VESKTOP_DIR, "static/tray/trayUnread.png"));
 copyFileSync(join(ASSETS, "splash.webp"), join(VESKTOP_DIR, "static/splash.webp"));
-copyFileSync(join(ROOT, "desktop/views/about.html"), join(VESKTOP_DIR, "static/views/about.html"));
 
 // Fenster, Ladebildschirm und Einrichtung in Moon-Farben
 write("static/views/common.css", read("static/views/common.css").replace(/:root \{[^}]*\}/, `:root {
@@ -117,6 +116,9 @@ for (const dir of ["src/main", "src/renderer", "static/views"]) {
         writeFileSync(path, out.join("\n"));
     }
 }
+// Eigene Über-Seite erst nach dem Umbenennen einsetzen – sie nennt Vesktop als Grundlage
+copyFileSync(join(ROOT, "desktop/views/about.html"), join(VESKTOP_DIR, "static/views/about.html"));
+
 if (renamed < 20) throw new Error(`patch-vesktop: nur ${renamed} Vesktop-Texte umbenannt, Vesktop hat sich wohl stark geändert`);
 console.log(`${renamed} Texte auf Moon-Cord umbenannt`);
 
