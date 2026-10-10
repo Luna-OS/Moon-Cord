@@ -1,0 +1,82 @@
+name: Sicherheits- & Upstream-Updates
+
+# Prüft jeden Tag, ob es neue Vencord- oder Vesktop-Versionen gibt (Plugin-
+# Reparaturen, Electron-/Chromium-Sicherheitsupdates). Wenn ja:
+#   1. upstream.json + Version anheben und auf den Branch auto/upstream-update legen
+#   2. Windows + Linux bauen und als Release veröffentlichen
+#   3. main auf den neuen Stand bringen
+# Installierte Moon-Cords laden das Release dann still im Hintergrund.
+# Schlägt der Build fehl, wird nichts veröffentlicht – GitHub schickt dann eine Mail.
+
+on:
+    schedule:
+        - cron: "17 4 * * *" # täglich 04:17 UTC
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pull-requests: write
+
+concurrency:
+    group: auto-update
+    cancel-in-progress: false
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+        outputs:
+            changed: ${{ steps.upstream.outputs.changed }}
+            version: ${{ steps.upstream.outputs.version }}
+            sha: ${{ steps.commit.outputs.sha }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: main
+
+            - id: upstream
+              name: Neue Upstream-Versionen suchen
+              run: node scripts/update-upstream.mjs
+
+            - id: commit
+              name: Update-Commit anlegen
+              if: steps.upstream.outputs.changed == 'true'
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git commit -am "Upstream-Update: Moon-Cord v${{ steps.upstream.outputs.version }}" -m "${{ steps.upstream.outputs.summary }}"
+                  git push --force origin HEAD:refs/heads/auto/upstream-update
+                  echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+    release:
+        needs: update
+        if: needs.update.outputs.changed == 'true'
+        uses: ./.github/workflows/release.yml
+        with:
+            ref: ${{ needs.update.outputs.sha }}
+
+    promote:
+        name: main aktualisieren
+        needs: [update, release]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: main
+                  fetch-depth: 0
+
+            - name: Update-Commit auf main übernehmen
+              run: |
+                  sha="${{ needs.update.outputs.sha }}"
+                  git fetch origin "$sha"
+                  if git push origin "$sha:refs/heads/main"; then
+                      echo "main steht jetzt auf v${{ needs.update.outputs.version }}"
+                      git push origin --delete auto/upstream-update || true
+                  else
+                      # main hat sich inzwischen geändert – dann als PR zum Mergen anbieten
+                      gh pr create --base main --head auto/upstream-update \
+                          --title "Upstream-Update: Moon-Cord v${{ needs.update.outputs.version }}" \
+                          --body "Automatisches Upstream-Update (schon als Release veröffentlicht). main hatte sich parallel geändert, deshalb bitte mergen." \
+                          || true
+                  fi
+              env:
+                  GH_TOKEN: ${{ github.token }}

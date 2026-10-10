@@ -60,13 +60,19 @@ Weitere Skripte:
 - `node scripts/generate-palette.mjs` – Moon-Palette neu aus Discords aktuellem CSS erzeugen (falls Discord seine Farben ändert)
 - `node scripts/generate-icons.mjs` – Icons aus `desktop/assets/*.svg` neu rendern (braucht Playwright)
 
+## Updates
+
+- **Moon-Cord aktualisiert sich selbst** – ohne Installer und ohne Klicken. Updates werden im Hintergrund geladen (nur die geänderten Teile) und still installiert: direkt beim Start, wenn eins bereitliegt, sonst beim Schließen. Mitten in einem Anruf wird nie neu gestartet. Wer nicht warten will: auf die Benachrichtigung klicken oder im Tray „Restart“.
+- **Sicherheitsupdates kommen automatisch**: Der Workflow [`auto-update.yml`](.github/workflows/auto-update.yml) prüft jeden Tag, ob es neue Vencord- oder Vesktop-Versionen gibt (Plugin-Reparaturen nach Discord-Updates, Electron-/Chromium-Sicherheitsupdates). Wenn ja, baut er Windows und Linux, veröffentlicht ein neues Release und alle Clients holen es sich still. Schlägt der Build fehl, wird nichts veröffentlicht und GitHub schickt eine Mail.
+- Plugin-Updates ohne App-Neustart lädt zusätzlich Vencords eigener Updater (Moon-Cord → Updater).
+
 ## Neue Version veröffentlichen
 
 1. Optional Vencord/Vesktop aktualisieren: neue Commits in `upstream.json` eintragen.
 2. `version` in `package.json` erhöhen.
 3. Auf `main` mergen – der **Release**-Workflow baut Windows und Linux und veröffentlicht das Release automatisch.
 
-Installierte Clients finden die neue Version selbst. Vencords eingebauter Updater (Vencord → Updater) holt sich Plugin-Updates ebenfalls aus den Moon-Cord-Releases.
+Installierte Clients finden die neue Version selbst und installieren sie still.
 
 ## Lizenz
 
