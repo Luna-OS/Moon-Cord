@@ -2,19 +2,22 @@ name: Release
 
 # Jeder Push auf main mit einer neuen Version in package.json wird automatisch
 # als GitHub-Release veröffentlicht. Moon-Cord und Vencords Updater holen sich
-# ihre Updates von dort.
+# ihre Updates von dort. Der tägliche Upstream-Check ruft diesen Workflow mit
+# einem bestimmten Commit (ref) auf.
 
 on:
     push:
         branches: [main]
     workflow_dispatch:
+    workflow_call:
+        inputs:
+            ref:
+                description: Commit, der veröffentlicht werden soll
+                type: string
+                required: true
 
 permissions:
     contents: write
-
-concurrency:
-    group: release
-    cancel-in-progress: false
 
 jobs:
     check:
@@ -24,6 +27,8 @@ jobs:
             exists: ${{ steps.version.outputs.exists }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
 
             - id: version
               run: |
@@ -42,12 +47,16 @@ jobs:
         needs: check
         if: needs.check.outputs.exists != 'true'
         uses: ./.github/workflows/build.yml
+        with:
+            ref: ${{ inputs.ref }}
 
     release:
         needs: [check, build]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
 
             - uses: actions/download-artifact@v4
               with:
@@ -57,7 +66,8 @@ jobs:
             - name: Release veröffentlichen
               run: |
                   version="${{ needs.check.outputs.version }}"
-                  short="${GITHUB_SHA::7}"
+                  sha=$(git rev-parse HEAD)
+                  short=$(git rev-parse --short=7 HEAD)
                   vencord=$(node -p 'require("./upstream.json").vencord.commit.slice(0, 7)')
                   vesktop=$(node -p 'require("./upstream.json").vesktop.commit.slice(0, 7)')
                   ls -la dist
@@ -83,7 +93,7 @@ jobs:
 
                   # Der Titel endet mit dem Commit-Hash – daran erkennt Vencords Updater neue Versionen
                   gh release create "v$version" dist/* \
-                      --target "$GITHUB_SHA" \
+                      --target "$sha" \
                       --title "Moon-Cord v$version $short" \
                       --notes-file notes.md
               env:

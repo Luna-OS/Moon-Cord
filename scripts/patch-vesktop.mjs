@@ -92,6 +92,34 @@ write("static/views/common.css", read("static/views/common.css").replace(/:root 
 replace("static/views/first-launch.html", "background: green;", "background: #8e7cff;");
 replace("static/views/first-launch.html", "background: red;", "background: #3a3168;");
 
+// ---------- Updates ohne Neuinstallation ----------
+// Eigener Updater: lädt still im Hintergrund und installiert beim Start oder Beenden,
+// statt Vesktops Update-Fenster mit sichtbarem Installer.
+
+copyFileSync(join(ROOT, "desktop/updater.ts"), join(VESKTOP_DIR, "src/main/updater.ts"));
+replace("src/renderer/components/settings/OutdatedVesktopWarning.tsx", "Your Vesktop is outdated!", "Ein Moon-Cord-Update ist bereit");
+replace("src/renderer/components/settings/OutdatedVesktopWarning.tsx",
+    "Staying up to date is important for security and stability.",
+    "Es wird beim nächsten Schließen automatisch installiert – oder jetzt sofort.");
+replace("src/renderer/components/settings/OutdatedVesktopWarning.tsx", "Open Updater", "Jetzt neu starten");
+// "Neu starten" im Tray installiert ein bereitliegendes Update gleich mit
+replace("src/main/tray.ts",
+    `label: "Restart",
+            click() {
+                app.relaunch();`,
+    `label: "Restart",
+            click() {
+                if (installUpdateNow()) return;
+                app.relaunch();`);
+replace("src/main/tray.ts", 'import { resolveAssetPath } from "./userAssets";', 'import { installUpdateNow } from "./updater";\nimport { resolveAssetPath } from "./userAssets";');
+
+// Windows kennt die App sonst unter Vesktops ID: Benachrichtigungen mit falschem Namen/Icon
+// und ein doppeltes Taskleisten-Symbol neben der angehefteten Verknüpfung
+replace("src/main/main.ts", 'app.setAppUserModelId("dev.vencord.vesktop")', `app.setAppUserModelId("${build.appId}")`);
+
+// Kein grauer/weißer Blitz beim Öffnen des Fensters, bevor Discord geladen ist
+replace("src/main/mainWindow.ts", 'nativeTheme.shouldUseDarkColors ? "#313338" : "#ffffff"', '"#130f28"');
+
 // ---------- Name "Vesktop" -> "Moon-Cord" in allen sichtbaren Texten ----------
 
 function* walk(dir) {

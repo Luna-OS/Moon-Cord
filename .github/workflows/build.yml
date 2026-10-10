@@ -3,6 +3,11 @@ name: Build
 on:
     pull_request:
     workflow_call:
+        inputs:
+            ref:
+                description: "Commit, der gebaut werden soll (Standard: der auslösende)"
+                type: string
+                required: false
     workflow_dispatch:
 
 env:
@@ -24,6 +29,8 @@ jobs:
 
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.ref }}
 
             - uses: pnpm/action-setup@v6 # Version aus "packageManager" in package.json
 
@@ -33,7 +40,7 @@ jobs:
 
             - name: Kurz-Hash für Vencords Updater
               shell: bash
-              run: echo "MOON_CORD_HASH=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+              run: echo "MOON_CORD_HASH=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_ENV"
 
             - name: Moon-Cord bauen
               run: node scripts/build.mjs --dist --${{ matrix.platform }}
