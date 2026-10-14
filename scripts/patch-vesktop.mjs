@@ -137,18 +137,19 @@ replace("src/renderer/components/ScreenSharePicker.tsx",
                     }}`);
 
 // ---------- Übertragen ohne Ruckeln ----------
-// 1. Video-Hardwarebeschleunigung (Kodieren/Dekodieren auf der Grafikkarte) ist bei
-//    Vesktop standardmäßig aus – unter Windows bei Moon-Cord an, auch für bestehende
-//    Installationen (einmalig; danach gilt wieder die Einstellung).
+// 1. Video-Hardwarebeschleunigung bleibt wie bei Vesktop standardmäßig aus: Chromiums
+//    Kodierung auf der Grafikkarte lässt Übertragungen bei vielen Grafikkarten abreißen
+//    (Discord "Fehler 2007"). v1.0.4/v1.0.5 hatten sie unter Windows eingeschaltet –
+//    das wird einmalig zurückgenommen; danach gilt wieder die eigene Einstellung.
 // 2. Immer die starke Grafikkarte nutzen, nicht die schwache im Prozessor.
 // 3. Liegt das Spiel über Moon-Cord, hält Windows das Fenster für verdeckt und
 //    Chromium bremst es aus – dann ruckelt die Übertragung. Das wird abgeschaltet.
 
 replace("src/main/main.ts",
     "    const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;",
-    `    if (process.platform === "win32" && !(State.store as any).moonCordVideoAcceleration) {
-        Settings.store.hardwareVideoAcceleration = true;
-        (State.store as any).moonCordVideoAcceleration = true;
+    `    if ((State.store as any).moonCordVideoAcceleration && !(State.store as any).moonCordVideoAccelerationReverted) {
+        Settings.store.hardwareVideoAcceleration = false;
+        (State.store as any).moonCordVideoAccelerationReverted = true;
     }
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;`);
@@ -162,7 +163,7 @@ replace("src/main/main.ts",
     if (disableSmoothScroll) {`);
 replace("src/renderer/components/settings/Settings.tsx",
     '"Enable hardware video acceleration. This can improve performance of screenshare and video playback, but may cause graphical glitches and infinitely loading streams."',
-    '"Kodiert Übertragungen und spielt Videos auf der Grafikkarte ab – deutlich weniger Ruckeln beim Streamen. Nur ausschalten, wenn Streams schwarz bleiben oder endlos laden."');
+    '"Kodiert Übertragungen und spielt Videos auf der Grafikkarte ab. Kann bei manchen Grafikkarten dazu führen, dass Übertragungen abreißen (Fehler 2007) oder endlos laden – dann wieder ausschalten."');
 
 // ---------- Mikrofon bleibt nicht mehr hängen ----------
 // Wächter: kommt im Sprachkanal 15 s lang exakt kein Ton mehr vom Mikrofon, wird es
