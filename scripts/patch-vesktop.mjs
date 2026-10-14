@@ -164,6 +164,16 @@ replace("src/renderer/components/settings/Settings.tsx",
     '"Enable hardware video acceleration. This can improve performance of screenshare and video playback, but may cause graphical glitches and infinitely loading streams."',
     '"Kodiert Übertragungen und spielt Videos auf der Grafikkarte ab – deutlich weniger Ruckeln beim Streamen. Nur ausschalten, wenn Streams schwarz bleiben oder endlos laden."');
 
+// ---------- Mikrofon bleibt nicht mehr hängen ----------
+// Wächter: kommt im Sprachkanal 15 s lang exakt kein Ton mehr vom Mikrofon, wird es
+// automatisch kurz stumm- und wieder eingeschaltet (das, was sonst von Hand hilft).
+// Außerdem darf Chromium die Windows-Mikrofonlautstärke nicht mehr selbst herunterregeln.
+
+copyFileSync(join(ROOT, "desktop/micWatchdog.ts"), join(VESKTOP_DIR, "src/renderer/patches/moonMicWatchdog.ts"));
+replace("src/main/main.ts",
+    '    disabledFeatures.add("MediaSessionService");',
+    '    disabledFeatures.add("MediaSessionService");\n    disabledFeatures.add("WebRtcAllowInputVolumeAdjustment");');
+
 // Windows kennt die App sonst unter Vesktops ID: Benachrichtigungen mit falschem Namen/Icon
 // und ein doppeltes Taskleisten-Symbol neben der angehefteten Verknüpfung
 replace("src/main/main.ts", 'app.setAppUserModelId("dev.vencord.vesktop")', `app.setAppUserModelId("${build.appId}")`);
