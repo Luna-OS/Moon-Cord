@@ -43,6 +43,11 @@ mediaDevices.getDisplayMedia = async function (this: MediaDevices, options?: Dis
     return stream;
 };
 
+/** Läuft gerade eine eigene Übertragung? */
+export function isStreaming() {
+    return activeTrack?.readyState === "live";
+}
+
 export function rememberStreamPick(pick: StreamPick) {
     lastPick = pick;
 }

@@ -5,8 +5,10 @@
 // eine dieser Stellen, bricht der Build mit einer klaren Meldung ab, statt
 // stillschweigend einen halb umgebauten Client zu bauen.
 
-import { copyFileSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { gunzipSync } from "node:zlib";
 
 import { ROOT, VESKTOP_DIR } from "./paths.mjs";
 
@@ -136,14 +138,20 @@ replace("src/renderer/components/ScreenSharePicker.tsx",
                         resolve(v);
                     }}`);
 
-// ---------- Übertragen ohne Ruckeln ----------
+// ---------- Übertragen, ohne dass das Spiel ruckelt ----------
 // 1. Video-Hardwarebeschleunigung bleibt wie bei Vesktop standardmäßig aus: Chromiums
 //    Kodierung auf der Grafikkarte lässt Übertragungen bei vielen Grafikkarten abreißen
 //    (Discord "Fehler 2007"). v1.0.4/v1.0.5 hatten sie unter Windows eingeschaltet –
 //    das wird einmalig zurückgenommen; danach gilt wieder die eigene Einstellung.
 // 2. Immer die starke Grafikkarte nutzen, nicht die schwache im Prozessor.
-// 3. Liegt das Spiel über Moon-Cord, hält Windows das Fenster für verdeckt und
-//    Chromium bremst es aus – dann ruckelt die Übertragung. Das wird abgeschaltet.
+// 3. Solange übertragen wird, laufen Moon-Cords Prozesse unter Windows mit niedrigerer
+//    Priorität – ist der Prozessor knapp, bekommt das Spiel den Vortritt
+//    (desktop/streamPriority.ts). Die Schalter aus v1.0.4, die Moon-Cord auch hinter dem
+//    Spiel voll weiterzeichnen ließen, sind wieder raus.
+// 4. Vesktop setzt "Inhaltstyp" (Bewegung/Details) aus dem Picker nur unter Linux. Unter
+//    Windows galt dadurch immer "Details": Bei knapper Leistung hält Chromium dann die
+//    volle Auflösung und kodiert mit voller Last weiter. Mit "Bewegung" (Standard) senkt es
+//    stattdessen die Auflösung – weniger Last, flüssiges Bild.
 
 replace("src/main/main.ts",
     "    const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;",
@@ -156,14 +164,69 @@ replace("src/main/main.ts",
 replace("src/main/main.ts",
     "    if (disableSmoothScroll) {",
     `    if (hardwareAcceleration) app.commandLine.appendSwitch("force_high_performance_gpu");
-    app.commandLine.appendSwitch("disable-renderer-backgrounding");
-    app.commandLine.appendSwitch("disable-background-timer-throttling");
-    if (process.platform === "win32") disabledFeatures.add("CalculateNativeWinOcclusion");
 
     if (disableSmoothScroll) {`);
 replace("src/renderer/components/settings/Settings.tsx",
     '"Enable hardware video acceleration. This can improve performance of screenshare and video playback, but may cause graphical glitches and infinitely loading streams."',
     '"Kodiert Übertragungen und spielt Videos auf der Grafikkarte ab. Kann bei manchen Grafikkarten dazu führen, dass Übertragungen abreißen (Fehler 2007) oder endlos laden – dann wieder ausschalten."');
+replace("src/renderer/components/ScreenSharePicker.tsx",
+    `                // @ts-expect-error incorrect type
+                const track = conn.input.stream.getVideoTracks()[0];
+`,
+    `                // @ts-expect-error incorrect type
+                const track = conn.input.stream.getVideoTracks()[0];
+                if (track && settings.contentHint) track.contentHint = settings.contentHint;
+`);
+
+// ---------- Tastenkürzel auch im Spiel + Übertragungs-Status ----------
+// Push-to-Talk, Stummschalten, Ton aus und Push-to-Mute aus Discords eigenen
+// Einstellungen funktionieren auch, wenn Moon-Cord im Hintergrund ist.
+// uiohook (MIT, libuiohook GPL-3.0) kommt als fertig gebautes Modul aus npm –
+// Version und Prüfsumme sind hier fest eingetragen.
+
+const UIOHOOK = {
+    url: "https://registry.npmjs.org/uiohook-napi/-/uiohook-napi-1.5.5.tgz",
+    integrity: "sha512-oSlTdnECw2GBfsJPTbBQBeE4v/EXP0EZmX6BJq5nzH/JgFaBE8JpFwEA/kLhiEP7HxQw28FViWiYgdIZzWuuJQ==",
+    targets: ["win32-x64", "linux-x64"]
+};
+
+async function fetchUiohook() {
+    const res = await fetch(UIOHOOK.url);
+    if (!res.ok) throw new Error(`uiohook-napi: ${res.status} ${res.statusText}`);
+    const tgz = Buffer.from(await res.arrayBuffer());
+
+    const integrity = "sha512-" + createHash("sha512").update(tgz).digest("base64");
+    if (integrity !== UIOHOOK.integrity) throw new Error(`uiohook-napi: falsche Prüfsumme ${integrity}`);
+
+    // .tgz = gzip + tar (512-Byte-Kopf je Datei)
+    const tar = gunzipSync(tgz);
+    const files = new Map();
+    for (let offset = 0; offset + 512 <= tar.length;) {
+        const name = tar.toString("utf-8", offset, offset + 100).replace(/\0.*$/s, "");
+        if (!name) break;
+        const size = parseInt(tar.toString("utf-8", offset + 124, offset + 136).replace(/\0.*$/s, "").trim() || "0", 8);
+        files.set(name, tar.subarray(offset + 512, offset + 512 + size));
+        offset += 512 + Math.ceil(size / 512) * 512;
+    }
+
+    mkdirSync(join(VESKTOP_DIR, "static/dist"), { recursive: true });
+    for (const target of UIOHOOK.targets) {
+        const file = files.get(`package/prebuilds/${target}/uiohook-napi.node`);
+        if (!file) throw new Error(`uiohook-napi: kein Modul für ${target}`);
+        writeFileSync(join(VESKTOP_DIR, `static/dist/uiohook-${target}.node`), file);
+    }
+}
+
+await fetchUiohook();
+copyFileSync(join(ROOT, "desktop/globalKeybinds.ts"), join(VESKTOP_DIR, "src/main/globalKeybinds.ts"));
+copyFileSync(join(ROOT, "desktop/streamPriority.ts"), join(VESKTOP_DIR, "src/main/streamPriority.ts"));
+copyFileSync(join(ROOT, "desktop/moonStatus.ts"), join(VESKTOP_DIR, "src/renderer/patches/moonStatus.ts"));
+replace("src/main/main.ts",
+    "        registerMediaPermissionsHandler();\n",
+    "        registerMediaPermissionsHandler();\n        startMoonStatus();\n");
+replace("src/main/main.ts",
+    'import { Settings, State } from "./settings";',
+    'import { Settings, State } from "./settings";\nimport { startMoonStatus } from "./streamPriority";');
 
 // ---------- Mikrofon bleibt nicht mehr hängen ----------
 // Wächter: kommt im Sprachkanal 15 s lang exakt kein Ton mehr vom Mikrofon, wird es

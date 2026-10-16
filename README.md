@@ -7,6 +7,8 @@ Ein eigener Discord-Client im **Moon-Design** (Nachtblau + Lila) – passend zum
 - **Moon-Hintergründe**: Mondnacht, Mondsichel, Horizont, Sternenhimmel, nur Verlauf oder ein eigenes Bild – halbtransparent hinter Chat und Kanalliste.
 - **Alle Vencord-Plugins an Bord** (über 160). Beliebte Plugins sind beim ersten Start schon an, alle anderen lassen sich mit einem Klick einschalten.
 - **Eigene App** mit Moon-Icon, Moon-Ladebildschirm und automatischen Updates aus diesem Repository.
+- **Tastenkürzel auch im Spiel**: Push-to-Talk, Stummschalten, Ton aus und Push-to-Mute aus Discords eigenen Einstellungen (Sprache & Video bzw. Tastenkürzel) funktionieren auch, wenn Moon-Cord im Hintergrund ist – bei Vesktop gehen sie nur im Vordergrund.
+- **Spiel zuerst beim Streamen**: Solange du überträgst, bekommt dein Spiel unter Windows Vorrang vor Moon-Cord, und der „Inhaltstyp“ aus dem Übertragungs-Fenster gilt jetzt auch unter Windows („Bewegung“ senkt bei knapper Leistung die Auflösung statt voll weiterzurechnen).
 - **Überall Moon-Cord**: Einstellungen, Menüs, Tray und Meldungen heißen Moon-Cord statt Vencord/Vesktop ([`scripts/rebrand.mjs`](scripts/rebrand.mjs) ändert nur sichtbare Texte, keinen Code).
 
 ## Installation

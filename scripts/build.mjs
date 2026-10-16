@@ -60,6 +60,7 @@ run(VENCORD_DIR, "git", ["clean", "-q", "-fd", "-e", "node_modules", "-e", "dist
 const pluginTarget = join(VENCORD_DIR, "src/plugins/moonCord");
 rmSync(pluginTarget, { recursive: true, force: true });
 cpSync(join(ROOT, "plugin/moonCord"), pluginTarget, { recursive: true });
+run(ROOT, process.execPath, ["scripts/patch-vencord.mjs"]);
 
 run(VENCORD_DIR, "pnpm", ["install", "--frozen-lockfile"]);
 // Sichtbare Texte "Vencord" -> "Moon-Cord" (Hauptprozess und interne Pfade bleiben)
