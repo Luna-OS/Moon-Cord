@@ -31,7 +31,7 @@ interface WatchedMic {
     track: MediaStreamTrack;
     probe: MediaStreamTrack;
     analyser: AnalyserNode;
-    buffer: Float32Array;
+    buffer: Float32Array<ArrayBuffer>;
 }
 
 let audioContext: AudioContext | null = null;
