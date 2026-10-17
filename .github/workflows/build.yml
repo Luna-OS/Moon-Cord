@@ -45,6 +45,17 @@ jobs:
             - name: Moon-Cord bauen
               run: node scripts/build.mjs --dist --${{ matrix.platform }}
 
+            # Installer für das echte Discord (Windows + Linux, aus dem Linux-Job)
+            - uses: actions/setup-go@v6
+              if: matrix.platform == 'linux'
+              with:
+                  go-version-file: installer/go.mod
+                  cache: false
+
+            - name: Moon-Cord für Discord bauen
+              if: matrix.platform == 'linux'
+              run: node scripts/build-installer.mjs
+
             - uses: actions/upload-artifact@v4
               with:
                   name: moon-cord-${{ matrix.platform }}
@@ -58,3 +69,8 @@ jobs:
                       dist/*.yml
                       dist/*.blockmap
                       dist/vencordDesktop*
+                      dist/moon-cord-discord-installer-linux
+                      dist/patcher.js
+                      dist/preload.js
+                      dist/renderer.js
+                      dist/renderer.css
