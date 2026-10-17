@@ -49,17 +49,50 @@ func main() {
 	version, _ := payload.ReadFile("files/version.txt")
 	fmt.Printf("\n  🌙 Moon-Cord für Discord  %s\n\n", strings.TrimSpace(string(version)))
 
+	// Pfad als Argument: z. B. Discord-Ordner oder Verknüpfung auf den Installer gezogen
+	if *root == "" && flag.NArg() > 0 {
+		*root = flag.Arg(0)
+	}
+
 	var installs []discordInstall
 	if *root != "" {
-		installs = []discordInstall{{Name: "Discord", Root: *root, Exe: "Discord.exe"}}
+		if d, err := installFromPath(*root); err == nil {
+			installs = []discordInstall{d}
+		} else {
+			fmt.Println("  ✖", err)
+		}
 	} else {
 		installs = findInstalls()
 	}
 
-	if len(installs) == 0 {
+	for len(installs) == 0 {
 		fmt.Println("  Kein installiertes Discord gefunden.")
-		fmt.Println("  Bitte zuerst Discord installieren: https://discord.com/download")
-		finish(interactive, 1)
+		fmt.Println()
+		fmt.Println("  Gesucht in:")
+		for _, dir := range searchedDirs() {
+			fmt.Println("    ·", dir)
+		}
+		fmt.Println()
+		if !interactive {
+			finish(interactive, 1)
+		}
+		fmt.Println("  So geht's trotzdem:")
+		fmt.Println("    – Discord starten und diesen Installer danach noch einmal öffnen, oder")
+		fmt.Println("    – die Discord-Verknüpfung (Desktop/Startmenü) in dieses Fenster ziehen und Enter drücken.")
+		fmt.Println("  (Nur Enter = beenden)")
+		fmt.Print("\n  Pfad: ")
+		input := strings.Trim(readLine(), "\"' ")
+		if input == "" {
+			finish(interactive, 1)
+		}
+		fmt.Println()
+		d, err := installFromPath(input)
+		if err != nil {
+			fmt.Println("  ✖", err)
+			fmt.Println()
+			continue
+		}
+		installs = []discordInstall{d}
 	}
 
 	fmt.Println("  Gefunden:")
@@ -141,34 +174,7 @@ func main() {
 	finish(interactive, 0)
 }
 
-// ---------- Discord finden ----------
-
-func findInstalls() []discordInstall {
-	var found []discordInstall
-	add := func(name, root, exe string) {
-		if len(resourceDirs(root)) > 0 {
-			found = append(found, discordInstall{name, root, exe})
-		}
-	}
-
-	switch runtime.GOOS {
-	case "windows":
-		local := os.Getenv("LOCALAPPDATA")
-		add("Discord", filepath.Join(local, "Discord"), "Discord.exe")
-		add("Discord PTB", filepath.Join(local, "DiscordPTB"), "DiscordPTB.exe")
-		add("Discord Canary", filepath.Join(local, "DiscordCanary"), "DiscordCanary.exe")
-		add("Discord Dev", filepath.Join(local, "DiscordDevelopment"), "DiscordDevelopment.exe")
-	case "linux":
-		config := configHome()
-		add("Discord", filepath.Join(config, "discord"), "")
-		add("Discord PTB", filepath.Join(config, "discordptb"), "")
-		add("Discord Canary", filepath.Join(config, "discordcanary"), "")
-		for _, dir := range []string{"/usr/share/discord", "/usr/lib/discord", "/usr/lib64/discord", "/opt/discord", "/opt/Discord"} {
-			add("Discord (System)", dir, "")
-		}
-	}
-	return found
-}
+// ---------- Discord finden (siehe auch discover.go) ----------
 
 // resourceDirs liefert alle resources-Ordner einer Installation, neueste Version zuerst.
 func resourceDirs(root string) []string {
@@ -354,11 +360,22 @@ func startDiscord(d discordInstall) {
 	if runtime.GOOS != "windows" {
 		return // unter Linux startet man Discord wie gewohnt selbst
 	}
-	updater := filepath.Join(d.Root, "Update.exe")
-	if !exists(updater) || d.Exe == "" {
+	if d.Exe == "" {
 		return
 	}
-	_ = hidden(exec.Command(updater, "--processStart", d.Exe)).Start()
+	if updater := filepath.Join(d.Root, "Update.exe"); exists(updater) {
+		_ = hidden(exec.Command(updater, "--processStart", d.Exe)).Start()
+		return
+	}
+	// Ohne Update.exe direkt die neueste Version starten
+	if dirs := resourceDirs(d.Root); len(dirs) > 0 {
+		exe := filepath.Join(filepath.Dir(dirs[0]), d.Exe)
+		if exists(exe) {
+			cmd := exec.Command(exe)
+			cmd.Dir = filepath.Dir(exe)
+			_ = cmd.Start()
+		}
+	}
 }
 
 // ---------- Hilfen ----------

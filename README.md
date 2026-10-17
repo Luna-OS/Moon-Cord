@@ -18,6 +18,7 @@ Statt einer eigenen App kommt Moon-Cord direkt in dein **installiertes, offiziel
 1. [`Moon-Cord-Discord-Installer.exe`](https://github.com/Luna-OS/Moon-Cord/releases/latest/download/Moon-Cord-Discord-Installer.exe) herunterladen und starten.
 2. **1** drücken (Installieren). Discord wird kurz beendet und startet im Moon-Design neu.
 
+- **„Kein installiertes Discord gefunden“?** Discord starten und den Installer noch einmal öffnen – ein laufendes Discord wird immer erkannt. Oder die Discord-Verknüpfung (Desktop/Startmenü) ins Installer-Fenster ziehen und Enter drücken. Discord aus dem Microsoft Store lässt sich nicht verändern – dann Discord von [discord.com/download](https://discord.com/download) nehmen.
 - Funktioniert mit Discord, PTB und Canary. Linux: [`moon-cord-discord-installer-linux`](https://github.com/Luna-OS/Moon-Cord/releases/latest/download/moon-cord-discord-installer-linux).
 - **Updates** von Moon-Cord kommen automatisch (Vencords Updater). Nach Discord-Updates klinkt sich Moon-Cord selbst wieder ein; falls nicht, den Installer einfach noch einmal starten.
 - **Entfernen**: Installer starten → **2**. Discord ist danach wieder exakt original.
