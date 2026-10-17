@@ -11,7 +11,19 @@ Ein eigener Discord-Client im **Moon-Design** (Nachtblau + Lila) – passend zum
 - **Spiel zuerst beim Streamen**: Solange du überträgst, bekommt dein Spiel unter Windows Vorrang vor Moon-Cord, und der „Inhaltstyp“ aus dem Übertragungs-Fenster gilt jetzt auch unter Windows („Bewegung“ senkt bei knapper Leistung die Auflösung statt voll weiterzurechnen).
 - **Überall Moon-Cord**: Einstellungen, Menüs, Tray und Meldungen heißen Moon-Cord statt Vencord/Vesktop ([`scripts/rebrand.mjs`](scripts/rebrand.mjs) ändert nur sichtbare Texte, keinen Code).
 
-## Installation
+## ⭐ Moon-Cord im echten Discord (empfohlen)
+
+Statt einer eigenen App kommt Moon-Cord direkt in dein **installiertes, offizielles Discord**. Damit hast du alles vom normalen Discord – eigener Sprach- und Stream-Motor (Kodierung über die Grafikkarte, kein Ruckeln im Spiel), globale Tastenkürzel, Krisp-Rauschunterdrückung, Overlay – plus Moon-Theme und alle Vencord-Plugins.
+
+1. [`Moon-Cord-Discord-Installer.exe`](https://github.com/Luna-OS/Moon-Cord/releases/latest/download/Moon-Cord-Discord-Installer.exe) herunterladen und starten.
+2. **1** drücken (Installieren). Discord wird kurz beendet und startet im Moon-Design neu.
+
+- Funktioniert mit Discord, PTB und Canary. Linux: [`moon-cord-discord-installer-linux`](https://github.com/Luna-OS/Moon-Cord/releases/latest/download/moon-cord-discord-installer-linux).
+- **Updates** von Moon-Cord kommen automatisch (Vencords Updater). Nach Discord-Updates klinkt sich Moon-Cord selbst wieder ein; falls nicht, den Installer einfach noch einmal starten.
+- **Entfernen**: Installer starten → **2**. Discord ist danach wieder exakt original.
+- So funktioniert es: Wie beim offiziellen Vencord-Installer wird Discords `resources/app.asar` zu `_app.asar` umbenannt; eine kleine neue `app.asar` lädt Moon-Cord aus `%APPDATA%\Moon-Cord-Discord` und danach das Original-Discord. Quellcode: [`installer/`](installer).
+
+## Eigene App (auf Vesktop-Basis)
 
 Unter [**Releases**](https://github.com/Luna-OS/Moon-Cord/releases/latest) herunterladen:
 

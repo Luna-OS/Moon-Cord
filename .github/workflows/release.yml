@@ -77,16 +77,20 @@ jobs:
 
                   Discord im Moon-Design (Nachtblau + Lila) – mit **allen Vencord-Plugins** und dem Moon-Theme, das auch Nitro-Themes überschreibt.
 
-                  ### Download
+                  ### ⭐ Empfohlen: Moon-Cord im echten Discord
+                  \`Moon-Cord-Discord-Installer.exe\` herunterladen und starten → **1** drücken. Moon-Theme und alle Plugins kommen in dein installiertes Discord – mit Discords eigenem Sprach- und Stream-Motor (Grafikkarte, globale Tastenkürzel, Krisp). Entfernen: Installer starten → **2**.
+                  Linux: \`moon-cord-discord-installer-linux\`.
+
+                  ### Eigene App (auf Vesktop-Basis)
                   | System | Datei |
                   | --- | --- |
-                  | **Windows** (Installer) | \`Moon-Cord-Setup-$version.exe\` |
+                  | Windows (Installer) | \`Moon-Cord-Setup-$version.exe\` |
                   | Windows (ohne Installation) | \`Moon-Cord-$version-win.zip\` |
                   | Linux | \`.AppImage\`, \`.deb\` oder \`.tar.gz\` |
 
-                  Updates kommen danach automatisch.
+                  Updates kommen bei beiden automatisch.
 
-                  > Windows zeigt beim ersten Start evtl. „Der Computer wurde durch Windows geschützt“, weil der Installer nicht signiert ist: **Weitere Informationen → Trotzdem ausführen**.
+                  > Windows zeigt beim ersten Start evtl. „Der Computer wurde durch Windows geschützt“, weil die Installer nicht signiert sind: **Weitere Informationen → Trotzdem ausführen**.
 
                   Basiert auf Vencord \`$vencord\` und Vesktop \`$vesktop\`.
                   NOTES
