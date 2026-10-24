@@ -1,10 +1,10 @@
 {
     "vencord": {
         "repo": "https://github.com/Vendicated/Vencord",
-        "commit": "b0e636df2ed5c9006b80ddc6644bc41110404bc3"
+        "commit": "443688b5366a4d43e9868519f48a4544cd7520d4"
     },
     "vesktop": {
         "repo": "https://github.com/Vencord/Vesktop",
-        "commit": "1723bd2a3338d17b039ada749e40a6a59971afe2"
+        "commit": "a40ef3d9eda6c5420c510701b69ab425a4f39d7f"
     }
 }
