@@ -104,16 +104,13 @@ replace("src/renderer/components/settings/OutdatedVesktopWarning.tsx",
     "Staying up to date is important for security and stability.",
     "Es wird beim nächsten Schließen automatisch installiert – oder jetzt sofort.");
 replace("src/renderer/components/settings/OutdatedVesktopWarning.tsx", "Open Updater", "Jetzt neu starten");
-// "Neu starten" im Tray installiert ein bereitliegendes Update gleich mit
-replace("src/main/tray.ts",
-    `label: "Restart",
-            click() {
-                app.relaunch();`,
-    `label: "Restart",
-            click() {
-                if (installUpdateNow()) return;
-                app.relaunch();`);
-replace("src/main/tray.ts", 'import { resolveAssetPath } from "./userAssets";', 'import { installUpdateNow } from "./updater";\nimport { resolveAssetPath } from "./userAssets";');
+// Jeder Neustart (Tray "Restart", Einstellungen, Reparieren) installiert ein bereitliegendes Update gleich mit
+replace("src/main/utils/relaunch.ts",
+    "export async function relaunch() {\n",
+    "export async function relaunch() {\n    if (installUpdateNow()) return;\n\n");
+replace("src/main/utils/relaunch.ts",
+    'import { app } from "electron";',
+    'import { app } from "electron";\nimport { installUpdateNow } from "main/updater";');
 
 // ---------- Screen-Share-Picker nicht mitten in der Übertragung ----------
 // Fragt Discord während einer laufenden Übertragung erneut an (Verbindungsabbruch,
@@ -148,35 +145,27 @@ replace("src/renderer/components/ScreenSharePicker.tsx",
 //    Priorität – ist der Prozessor knapp, bekommt das Spiel den Vortritt
 //    (desktop/streamPriority.ts). Die Schalter aus v1.0.4, die Moon-Cord auch hinter dem
 //    Spiel voll weiterzeichnen ließen, sind wieder raus.
-// 4. Vesktop setzt "Inhaltstyp" (Bewegung/Details) aus dem Picker nur unter Linux. Unter
-//    Windows galt dadurch immer "Details": Bei knapper Leistung hält Chromium dann die
-//    volle Auflösung und kodiert mit voller Last weiter. Mit "Bewegung" (Standard) senkt es
-//    stattdessen die Auflösung – weniger Last, flüssiges Bild.
 
 replace("src/main/main.ts",
-    "    const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;",
-    `    if ((State.store as any).moonCordVideoAcceleration && !(State.store as any).moonCordVideoAccelerationReverted) {
+    '    setAsDefaultProtocolClient("discord");\n',
+    `    setAsDefaultProtocolClient("discord");
+
+    if ((State.store as any).moonCordVideoAcceleration && !(State.store as any).moonCordVideoAccelerationReverted) {
         Settings.store.hardwareVideoAcceleration = false;
         (State.store as any).moonCordVideoAccelerationReverted = true;
     }
-
-    const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;`);
+`);
 replace("src/main/main.ts",
     "    if (disableSmoothScroll) {",
     `    if (hardwareAcceleration) app.commandLine.appendSwitch("force_high_performance_gpu");
 
     if (disableSmoothScroll) {`);
 replace("src/renderer/components/settings/Settings.tsx",
-    '"Enable hardware video acceleration. This can improve performance of screenshare and video playback, but may cause graphical glitches and infinitely loading streams."',
-    '"Kodiert Übertragungen und spielt Videos auf der Grafikkarte ab. Kann bei manchen Grafikkarten dazu führen, dass Übertragungen abreißen (Fehler 2007) oder endlos laden – dann wieder ausschalten."');
-replace("src/renderer/components/ScreenSharePicker.tsx",
-    `                // @ts-expect-error incorrect type
-                const track = conn.input.stream.getVideoTracks()[0];
-`,
-    `                // @ts-expect-error incorrect type
-                const track = conn.input.stream.getVideoTracks()[0];
-                if (track && settings.contentHint) track.contentHint = settings.contentHint;
-`);
+    '"Use your GPU to decode video, like streams you watch. This can improve performance, but may cause graphical glitches."',
+    '"Spielt Videos und Streams, die du anschaust, auf der Grafikkarte ab. Schneller, kann aber Grafikfehler verursachen."');
+replace("src/renderer/components/settings/Settings.tsx",
+    '"Use your GPU to encode your screenshare. This lowers CPU usage, but on some drivers (for example AMD with Mesa 24.3 or newer) viewers will be stuck loading your stream forever."',
+    '"Kodiert deine Übertragung auf der Grafikkarte – weniger Last für den Prozessor. Bei manchen Grafikkarten reißt die Übertragung dann aber ab (Fehler 2007) oder lädt bei den Zuschauern endlos – dann wieder ausschalten."');
 
 // ---------- Tastenkürzel auch im Spiel + Übertragungs-Status ----------
 // Push-to-Talk, Stummschalten, Ton aus und Push-to-Mute aus Discords eigenen
@@ -291,37 +280,39 @@ replace("src/main/utils/vencordLoader.ts",
     `"/repos/${REPO}/releases/latest"`);
 
 replace("src/main/utils/vencordLoader.ts",
-    `export async function ensureVencordFiles() {
-    if (await isValidVencordInstall(VENCORD_FILES_DIR)) return;
-
-    mkdirSync(VENCORD_FILES_DIR, { recursive: true });
-`,
+    "export async function downloadVencordFiles() {\n",
     `const BUNDLED_VENCORD_DIR = app.isPackaged
     ? join(process.resourcesPath, "moon-vencord")
     : join(__dirname, "../../moon-vencord");
 const BUNDLED_MARKER = "moon-cord-bundle.txt";
 
-async function copyBundledVencord() {
+/** Kopiert das mitgelieferte Moon-Vencord in den Datenordner, wenn es neuer ist (oder force). */
+export async function copyBundledVencord(force = false) {
     if (State.store.vencordDir || !(await isValidVencordInstall(BUNDLED_VENCORD_DIR))) return false;
 
     const bundled = await readFile(join(BUNDLED_VENCORD_DIR, BUNDLED_MARKER), "utf-8").catch(() => "");
     const installed = await readFile(join(VENCORD_FILES_DIR, BUNDLED_MARKER), "utf-8").catch(() => null);
-    if (bundled === installed && (await isValidVencordInstall(VENCORD_FILES_DIR))) return true;
+    if (!force && bundled === installed && (await isValidVencordInstall(VENCORD_FILES_DIR))) return true;
 
     mkdirSync(VENCORD_FILES_DIR, { recursive: true });
     await cp(BUNDLED_VENCORD_DIR, VENCORD_FILES_DIR, { recursive: true, force: true });
     return true;
 }
 
-export async function ensureVencordFiles() {
-    if (await copyBundledVencord()) return;
-    if (await isValidVencordInstall(VENCORD_FILES_DIR)) return;
+export async function downloadVencordFiles() {
+    // "Reparieren": erst das mitgelieferte Moon-Vencord, nur ohne es aus dem Moon-Cord-Release laden
+    if (await copyBundledVencord(true)) return;
 
-    mkdirSync(VENCORD_FILES_DIR, { recursive: true });
 `);
 replace("src/main/utils/vencordLoader.ts",
-    'import { access, constants as FsConstants, writeFile } from "fs/promises";',
-    'import { app } from "electron";\nimport { access, constants as FsConstants, cp, readFile, writeFile } from "fs/promises";\nimport { State } from "main/settings";');
+    'import { access, constants as FsConstants, rename, writeFile } from "fs/promises";',
+    'import { app } from "electron";\nimport { access, constants as FsConstants, cp, readFile, rename, writeFile } from "fs/promises";\nimport { State } from "main/settings";');
+replace("src/main/mainWindow.ts",
+    "        if (!(await isValidVencordInstall(VENCORD_FILES_DIR))) {\n",
+    "        await copyBundledVencord();\n        if (!(await isValidVencordInstall(VENCORD_FILES_DIR))) {\n");
+replace("src/main/mainWindow.ts",
+    'import { downloadVencordFiles, isValidVencordInstall } from "./utils/vencordLoader";',
+    'import { copyBundledVencord, downloadVencordFiles, isValidVencordInstall } from "./utils/vencordLoader";');
 
 // ---------- Moon-Standardeinstellungen für Vencord ----------
 // Beim allerersten Start: Moon-Theme an und eine Auswahl beliebter Plugins aktiv.
@@ -331,10 +322,7 @@ replace("src/main/constants.ts",
     'export const VENCORD_SETTINGS_FILE = join(VENCORD_SETTINGS_DIR, "settings.json");',
     `export const VENCORD_SETTINGS_FILE = join(VENCORD_SETTINGS_DIR, "settings.json");
 if (!existsSync(VENCORD_SETTINGS_FILE)) {
-    writeFileSync(VENCORD_SETTINGS_FILE, JSON.stringify(require("./moonVencordDefaults.json"), null, 4));
+    require("fs").writeFileSync(VENCORD_SETTINGS_FILE, JSON.stringify(require("./moonVencordDefaults.json"), null, 4));
 }`);
-replace("src/main/constants.ts",
-    'import { existsSync, mkdirSync } from "fs";',
-    'import { existsSync, mkdirSync, writeFileSync } from "fs";');
 
 console.log(`Vesktop in ${relative(ROOT, VESKTOP_DIR)} zu Moon-Cord ${pkg.version} umgebaut`);
